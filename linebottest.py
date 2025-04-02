@@ -10,14 +10,21 @@ handler = WebhookHandler('685f61fbe19391266373fa109672b812')
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    json_data = request.get_json()
-    user_message = json_data['events'][0]['message']['text']
-    reply_text = f"收到你的訊息：{user_message}"
-    line_bot_api.reply_message(
-        json_data['events'][0]['replyToken'],
-        TextSendMessage(text=reply_text)
-    )
-    return 'OK', 200
+    try:
+        json_data = request.get_json()
+        if not json_data or 'events' not in json_data or not json_data['events']:
+            print("No events in webhook request")
+            return 'OK', 200  # 空請求也回200
+        user_message = json_data['events'][0]['message']['text']
+        reply_text = f"收到你的訊息：{user_message}"
+        line_bot_api.reply_message(
+            json_data['events'][0]['replyToken'],
+            TextSendMessage(text=reply_text)
+        )
+        return 'OK', 200
+    except Exception as e:
+        print(f"Error: {e}")
+        return 'OK', 200  # 其他錯誤也回200，避免500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
